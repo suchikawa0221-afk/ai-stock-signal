@@ -27,6 +27,7 @@ import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import requests
@@ -112,11 +113,19 @@ def load_watchlist() -> list[Stock]:
 
 
 # ---------------------------------------------------------------- データ取得
-def fetch_prices(ticker: str) -> pd.DataFrame:
+MARKET_CLOSE = {"JP": ("Asia/Tokyo", dt.time(15, 45)), "US": ("America/New_York", dt.time(16, 15))}
+
+
+def fetch_prices(ticker: str, market: str = "US") -> pd.DataFrame:
     df = yf.Ticker(ticker).history(period="1y", interval="1d", auto_adjust=True)
     if df is None or df.empty:
         raise RuntimeError("株価データを取得できませんでした")
     df = df[["Open", "High", "Low", "Close", "Volume"]].dropna(subset=["Close"])
+    # 取引時間中に実行した場合、今日の足は未確定（出来高が少ない等）なので除く
+    tz, close_t = MARKET_CLOSE.get(market, MARKET_CLOSE["US"])
+    now = dt.datetime.now(ZoneInfo(tz))
+    if len(df) and df.index[-1].date() == now.date() and now.time() < close_t:
+        df = df.iloc[:-1]
     if len(df) < 80:
         raise RuntimeError(f"データが足りません（{len(df)}日分）")
     return df
@@ -693,7 +702,7 @@ def main() -> int:
     # 1) テクニカル分析（全銘柄）
     for s in stocks:
         try:
-            r = analyze(s, fetch_prices(s.ticker), cfg)
+            r = analyze(s, fetch_prices(s.ticker, s.market), cfg)
             results.append(r)
             print(f"  {s.ticker:10s} {r.signal:5s} score={r.score:3d} RSI={r.rsi:5.1f} vol={r.vol_ratio:.1f}")
         except Exception as e:  # 1銘柄の失敗で全体を止めない
