@@ -456,6 +456,82 @@ def build_message(results: list[Result], errors: list[str], trade_logs: list[str
     return "\n".join(lines)
 
 
+MARKET_LABEL = {"JP": "日本株", "US": "米国株"}
+SIGNAL_LABEL = {"BUY": "🟢 買い候補", "SELL": "🔴 売り・警戒", "WATCH": "🟡 監視", "NONE": "－"}
+
+
+def build_markdown(results: list[Result], trade_logs: dict[str, str], report: str, errors: list[str], market: str, cfg: dict) -> str:
+    """スマホの GitHub で読みやすい結果ページ（Markdown）。"""
+    label = MARKET_LABEL.get(market, market)
+    day = max((r.date for r in results), default=dt.date.today())
+    jst = dt.datetime.now(dt.timezone(dt.timedelta(hours=9)))
+    out = [
+        f"# {label} 分析結果 {day:%Y-%m-%d}",
+        "",
+        f"更新：{jst:%Y-%m-%d %H:%M}（日本時間）／ 分析 {len(results)}銘柄",
+        "",
+    ]
+
+    def section(title: str, rows: list[Result], with_stop: bool = False) -> None:
+        out.append(f"## {title}")
+        out.append("")
+        if not rows:
+            out.append("なし")
+            out.append("")
+            return
+        for r in rows:
+            out.append(f"### {r.stock.ticker} {r.stock.name}（スコア {r.score}/100）")
+            out.append("")
+            out.append(f"- 終値 {fmt_price(r)} ／ RSI {r.rsi:.0f} ／ 出来高 平均比{r.vol_ratio:.1f}倍")
+            for s in r.reasons:
+                out.append(f"- {s}")
+            for w in r.warnings:
+                out.append(f"- ⚠ {w}")
+            if with_stop:
+                out.append(f"- 損切り目安 {r.close * (1 + cfg['stop_loss_pct'] / 100):,.2f}（{cfg['stop_loss_pct']:+.0f}%）")
+            for h in r.headlines:
+                out.append(f"- 📰 {h}")
+            out.append("")
+
+    section("🟢 買い候補", sorted([r for r in results if r.signal == "BUY"], key=lambda r: -r.score), with_stop=True)
+    section("🔴 売り・警戒", [r for r in results if r.signal == "SELL"])
+
+    out += ["## 全銘柄一覧（スコア順）", "", "| 銘柄 | 判定 | スコア | 終値 | RSI | 出来高比 | トレンド/MACD/RSI/出来高 |", "|---|---|---:|---:|---:|---:|---|"]
+    for r in sorted(results, key=lambda r: -r.score):
+        b = r.breakdown
+        out.append(
+            f"| {r.stock.ticker} {r.stock.name} | {SIGNAL_LABEL[r.signal]} | {r.score} | {fmt_price(r)} | {r.rsi:.0f} | {r.vol_ratio:.1f} "
+            f"| {b['トレンド']}/{b['MACD']}/{b['RSI']}/{b['出来高']} |"
+        )
+    out.append("")
+
+    out += ["## 仮想売買", ""]
+    logs = [t for tk, t in trade_logs.items() if any(r.stock.ticker == tk for r in results)]
+    out += [f"- {t}" for t in logs] or ["- 本日の売買なし"]
+    out += ["", "```", report, "```", ""]
+    if errors:
+        out += ["## 取得エラー", ""] + [f"- {e}" for e in errors] + [""]
+    out += ["---", "", DISCLAIMER, ""]
+    return "\n".join(out)
+
+
+def write_result_pages(results: list[Result], trade_logs: dict[str, str], report: str, errors: list[str], cfg: dict) -> None:
+    out_dir = ROOT / "results"
+    archive = out_dir / "archive"
+    archive.mkdir(parents=True, exist_ok=True)
+    for mk in ("JP", "US"):
+        subset = [r for r in results if r.stock.market == mk]
+        errs = [e for e in errors if (e.split(":")[0].endswith(".T")) == (mk == "JP")]
+        if not subset and not errs:
+            continue
+        md = build_markdown(subset, trade_logs, report, errs, mk, cfg)
+        name = "最新_日本株.md" if mk == "JP" else "最新_米国株.md"
+        (out_dir / name).write_text(md, encoding="utf-8")
+        day = max((r.date for r in subset), default=dt.date.today())
+        (archive / f"{day:%Y-%m-%d}_{mk.lower()}.md").write_text(md, encoding="utf-8")
+        print(f"結果ページを保存: results/{name}")
+
+
 def send_telegram(text: str) -> bool:
     token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
@@ -506,7 +582,7 @@ def main() -> int:
 
     results: list[Result] = []
     errors: list[str] = []
-    trade_logs: list[str] = []
+    trade_logs: dict[str, str] = {}
     for s in stocks:
         try:
             r = analyze(s, fetch_prices(s.ticker), cfg)
@@ -517,7 +593,7 @@ def main() -> int:
             if cfg["paper_trading"]:
                 log = update_paper_trade(con, r, cfg)
                 if log:
-                    trade_logs.append(log)
+                    trade_logs[s.ticker] = log
             print(f"  {s.ticker:10s} {r.signal:5s} score={r.score:3d} RSI={r.rsi:5.1f} vol={r.vol_ratio:.1f}")
         except Exception as e:  # 1銘柄の失敗で全体を止めない
             errors.append(f"{s.ticker}: {e}")
@@ -525,7 +601,8 @@ def main() -> int:
     con.commit()
 
     report = paper_report(con) if cfg["paper_trading"] else ""
-    msg = build_message(results, errors, trade_logs, report, args.market, cfg)
+    write_result_pages(results, trade_logs, report, errors, cfg)
+    msg = build_message(results, errors, list(trade_logs.values()), report, args.market, cfg)
     con.close()
 
     if msg is None:
