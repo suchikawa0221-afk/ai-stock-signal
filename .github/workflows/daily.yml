@@ -1,0 +1,62 @@
+name: daily-stock-signal
+
+on:
+  schedule:
+    - cron: "0 7 * * 1-5"    # 日本時間 16:00（平日）日本株の引け後
+    - cron: "30 22 * * 1-5"  # 日本時間 翌7:30（米国の月〜金の引け後）
+  workflow_dispatch:
+    inputs:
+      market:
+        description: "jp / us / all"
+        required: false
+        default: "all"
+
+permissions:
+  contents: write   # 分析履歴(data/signals.db)をリポジトリに保存するため
+
+concurrency:
+  group: stock-signal
+  cancel-in-progress: false
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: 対象市場を決める
+        id: m
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "market=${{ inputs.market }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.schedule }}" = "0 7 * * 1-5" ]; then
+            echo "market=jp" >> "$GITHUB_OUTPUT"
+          else
+            echo "market=us" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 分析して通知
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python main.py --market "${{ steps.m.outputs.market }}"
+
+      - name: 分析履歴を保存
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add data/ || true
+          if ! git diff --cached --quiet; then
+            git commit -m "signals: $(date -u +%F) ${{ steps.m.outputs.market }}"
+            git pull --rebase
+            git push
+          fi
