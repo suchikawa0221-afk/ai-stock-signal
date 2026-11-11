@@ -524,7 +524,7 @@ def build_message(results: list[Result], errors: list[str], trade_logs: list[str
             lines.append(f"  ・{s}")
         for w in r.warnings:
             lines.append(f"  ⚠ {w}")
-        lines += [f"  {x}" for x in ai_lines(r)]
+        lines.extend(f"  {x}" for x in ai_lines(r))
         for h in r.headlines:
             lines.append(f"  📰 {h}")
 
@@ -593,8 +593,8 @@ def build_markdown(results: list[Result], trade_logs: dict[str, str], report: st
             if r.ai:
                 a = r.ai
                 out.append(f"- 🤖 **AI評価：{a.stance}**（業績{a.fundamental}/25・材料{a.news}/15・リスク{a.risk}/10）{a.summary}")
-                out += [f"  - ＋ {c}" for c in a.catalysts]
-                out += [f"  - － {x}" for x in a.risks]
+                out.extend(f"  - ＋ {c}" for c in a.catalysts)
+                out.extend(f"  - － {x}" for x in a.risks)
             elif r.ai_error:
                 out.append(f"- 🤖 AI評価：失敗（{r.ai_error[:80]}）")
             if with_stop:
