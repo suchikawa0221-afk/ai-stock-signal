@@ -24,12 +24,15 @@ import json
 import os
 import sqlite3
 import sys
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import pandas as pd
 import requests
 import yfinance as yf
+
+import ai_analysis
 
 ROOT = Path(__file__).resolve().parent
 CONFIG_PATH = ROOT / "config.json"
@@ -48,6 +51,12 @@ DEFAULT_CONFIG = {
     "notify_when_no_signal": True,
     "show_news": True,
     "paper_trading": True,
+    "ai_enabled": True,
+    "ai_models": ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-2.5-flash"],
+    "ai_web_search": True,
+    "ai_max_calls": 8,
+    "ai_interval_sec": 8,
+    "ai_min_score": 25,
 }
 
 DISCLAIMER = "※機械的な条件判定の結果です。売買の推奨ではありません。最終判断はご自身で。"
@@ -191,6 +200,69 @@ class Result:
     reasons: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     headlines: list[str] = field(default_factory=list)
+    ai: "ai_analysis.AIResult | None" = None
+    ai_error: str = ""
+
+    @property
+    def total(self) -> int:
+        """総合スコア（100点）：テクニカル50% ＋ AI(業績25・ニュース15・リスク10)。AI無しならテクニカルのみ。"""
+        return round(self.score * 0.5 + self.ai.total) if self.ai else self.score
+
+    def technical_text(self) -> str:
+        b = self.breakdown
+        return (
+            f"日付 {self.date} 終値 {self.close:.2f} / テクニカルスコア {self.score}/100"
+            f"（トレンド{b['トレンド']}/30, MACD{b['MACD']}/30, RSI{b['RSI']}/20, 出来高{b['出来高']}/20）\n"
+            f"RSI {self.rsi:.1f} / MACD {self.macd:.3f} シグナル {self.macd_signal:.3f} / 出来高 平均比{self.vol_ratio:.2f}倍\n"
+            f"判定根拠: {' / '.join(self.reasons) or 'なし'}\n注意: {' / '.join(self.warnings) or 'なし'}"
+        )
+
+
+def score_text(r: Result) -> str:
+    if r.ai:
+        return f"総合 {r.total}/100（テクニカル{r.score}・AI{r.ai.total}/50）"
+    return f"テクニカル {r.score}/100"
+
+
+def ai_lines(r: Result) -> list[str]:
+    if r.ai:
+        a = r.ai
+        out = [
+            f"🤖 AI評価：{a.stance}（業績{a.fundamental}/25・材料{a.news}/15・リスク{a.risk}/10）",
+            f"   {a.summary}",
+        ]
+        out += [f"   ＋ {c}" for c in a.catalysts]
+        out += [f"   － {x}" for x in a.risks]
+        return out
+    if r.ai_error:
+        return [f"🤖 AI評価：失敗（{r.ai_error[:80]}）"]
+    return []
+
+
+def apply_ai(results: list[Result], cfg: dict) -> None:
+    """買い・売り・監視・保有中の銘柄だけAIで評価（無料枠の回数制限のため）。"""
+    if not cfg.get("ai_enabled") or not ai_analysis.api_key():
+        print("（GEMINI_API_KEY 未設定のためAI分析はスキップ）")
+        return
+    prio = {"BUY": 0, "SELL": 1, "WATCH": 2}
+    targets = sorted(
+        [r for r in results if r.signal in prio or r.stock.entry_price],
+        key=lambda r: (prio.get(r.signal, 3), -r.score),
+    )[: int(cfg["ai_max_calls"])]
+    for i, r in enumerate(targets):
+        if i:
+            time.sleep(float(cfg["ai_interval_sec"]))
+        try:
+            r.ai = ai_analysis.analyze(r.stock, r.technical_text(), cfg)
+            print(f"  AI {r.stock.ticker}: {r.ai.stance} {r.ai.total}/50 ({r.ai.model})")
+        except Exception as e:
+            r.ai_error = str(e)
+            print(f"  AI {r.stock.ticker}: {e}")
+            continue
+        # AIだけで買いにはしない。テクニカル買い候補をAIが否定したら「監視」に下げる。
+        if r.signal == "BUY" and (r.ai.total < cfg["ai_min_score"] or r.ai.stance == "弱気"):
+            r.signal = "WATCH"
+            r.reasons.append(f"AI評価が低いため監視に変更（{r.ai.total}/50・{r.ai.stance}）")
 
 
 def analyze(stock: Stock, df: pd.DataFrame, cfg: dict) -> Result:
@@ -328,9 +400,28 @@ def open_db() -> sqlite3.Connection:
             entry_date TEXT, entry_price REAL, entry_score INTEGER,
             exit_date TEXT, exit_price REAL, pnl_pct REAL, exit_reason TEXT
         );
+        CREATE TABLE IF NOT EXISTS ai_analysis (
+            date TEXT, ticker TEXT, model TEXT,
+            fundamental INTEGER, news INTEGER, risk INTEGER, ai_total INTEGER, total INTEGER,
+            stance TEXT, summary TEXT, catalysts TEXT, risks TEXT,
+            PRIMARY KEY (date, ticker)
+        );
         """
     )
     return con
+
+
+def save_ai(con: sqlite3.Connection, r: Result) -> None:
+    if not r.ai:
+        return
+    a = r.ai
+    con.execute(
+        "INSERT OR REPLACE INTO ai_analysis VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+        (
+            r.date.isoformat(), r.stock.ticker, a.model, a.fundamental, a.news, a.risk, a.total, r.total,
+            a.stance, a.summary, json.dumps(a.catalysts, ensure_ascii=False), json.dumps(a.risks, ensure_ascii=False),
+        ),
+    )
 
 
 def save_result(con: sqlite3.Connection, r: Result) -> None:
@@ -406,9 +497,9 @@ def fmt_price(r: Result) -> str:
 
 
 def build_message(results: list[Result], errors: list[str], trade_logs: list[str], report: str, market: str, cfg: dict) -> str | None:
-    buys = sorted([r for r in results if r.signal == "BUY"], key=lambda r: -r.score)
+    buys = sorted([r for r in results if r.signal == "BUY"], key=lambda r: -r.total)
     sells = [r for r in results if r.signal == "SELL"]
-    watches = sorted([r for r in results if r.signal == "WATCH"], key=lambda r: -r.score)
+    watches = sorted([r for r in results if r.signal == "WATCH"], key=lambda r: -r.total)
     if not buys and not sells and not cfg["notify_when_no_signal"] and not errors:
         return None
 
@@ -418,12 +509,13 @@ def build_message(results: list[Result], errors: list[str], trade_logs: list[str
 
     def block(r: Result, head: str) -> None:
         lines.append("")
-        lines.append(f"{head} {r.stock.ticker} {r.stock.name}  スコア {r.score}/100")
+        lines.append(f"{head} {r.stock.ticker} {r.stock.name}  {score_text(r)}")
         lines.append(f"  終値 {fmt_price(r)} / RSI {r.rsi:.0f} / 出来高 平均比{r.vol_ratio:.1f}倍")
         for s in r.reasons:
             lines.append(f"  ・{s}")
         for w in r.warnings:
             lines.append(f"  ⚠ {w}")
+        lines += [f"  {x}" for x in ai_lines(r)]
         for h in r.headlines:
             lines.append(f"  📰 {h}")
 
@@ -439,7 +531,9 @@ def build_message(results: list[Result], errors: list[str], trade_logs: list[str
     if watches:
         lines.append("\n【もう少しで買い条件（監視）】")
         for r in watches:
-            lines.append(f"🟡 {r.stock.ticker} {r.stock.name} スコア {r.score}")
+            lines.append(f"🟡 {r.stock.ticker} {r.stock.name} {score_text(r)}")
+            if r.ai:
+                lines.append(f"   🤖 {r.ai.stance}：{r.ai.summary}")
     if not buys and not sells:
         lines.append("\n本日は条件に合う銘柄はありませんでした。")
     if trade_logs:
@@ -480,29 +574,42 @@ def build_markdown(results: list[Result], trade_logs: dict[str, str], report: st
             out.append("")
             return
         for r in rows:
-            out.append(f"### {r.stock.ticker} {r.stock.name}（スコア {r.score}/100）")
+            out.append(f"### {r.stock.ticker} {r.stock.name}（{score_text(r)}）")
             out.append("")
             out.append(f"- 終値 {fmt_price(r)} ／ RSI {r.rsi:.0f} ／ 出来高 平均比{r.vol_ratio:.1f}倍")
             for s in r.reasons:
                 out.append(f"- {s}")
             for w in r.warnings:
                 out.append(f"- ⚠ {w}")
+            if r.ai:
+                a = r.ai
+                out.append(f"- 🤖 **AI評価：{a.stance}**（業績{a.fundamental}/25・材料{a.news}/15・リスク{a.risk}/10）{a.summary}")
+                out += [f"  - ＋ {c}" for c in a.catalysts]
+                out += [f"  - － {x}" for x in a.risks]
+            elif r.ai_error:
+                out.append(f"- 🤖 AI評価：失敗（{r.ai_error[:80]}）")
             if with_stop:
                 out.append(f"- 損切り目安 {r.close * (1 + cfg['stop_loss_pct'] / 100):,.2f}（{cfg['stop_loss_pct']:+.0f}%）")
             for h in r.headlines:
                 out.append(f"- 📰 {h}")
             out.append("")
 
-    section("🟢 買い候補", sorted([r for r in results if r.signal == "BUY"], key=lambda r: -r.score), with_stop=True)
+    section("🟢 買い候補", sorted([r for r in results if r.signal == "BUY"], key=lambda r: -r.total), with_stop=True)
     section("🔴 売り・警戒", [r for r in results if r.signal == "SELL"])
+    section("🟡 監視（もう少しで買い条件）", sorted([r for r in results if r.signal == "WATCH"], key=lambda r: -r.total))
 
-    out += ["## 全銘柄一覧（スコア順）", "", "| 銘柄 | 判定 | スコア | 終値 | RSI | 出来高比 | トレンド/MACD/RSI/出来高 |", "|---|---|---:|---:|---:|---:|---|"]
-    for r in sorted(results, key=lambda r: -r.score):
-        b = r.breakdown
+    out += [
+        "## 全銘柄一覧（総合スコア順）", "",
+        "| 銘柄 | 判定 | 総合 | テクニカル | AI | 終値 | RSI | 出来高比 |",
+        "|---|---|---:|---:|---:|---:|---:|---:|",
+    ]
+    for r in sorted(results, key=lambda r: -r.total):
+        ai = f"{r.ai.total}/50 {r.ai.stance}" if r.ai else "－"
         out.append(
-            f"| {r.stock.ticker} {r.stock.name} | {SIGNAL_LABEL[r.signal]} | {r.score} | {fmt_price(r)} | {r.rsi:.0f} | {r.vol_ratio:.1f} "
-            f"| {b['トレンド']}/{b['MACD']}/{b['RSI']}/{b['出来高']} |"
+            f"| {r.stock.ticker} {r.stock.name} | {SIGNAL_LABEL[r.signal]} | {r.total} | {r.score} | {ai} "
+            f"| {fmt_price(r)} | {r.rsi:.0f} | {r.vol_ratio:.1f} |"
         )
+    out += ["", "総合＝テクニカル×0.5＋AI（業績25・材料15・リスク10）。AI未評価の銘柄はテクニカルのみ。"]
     out.append("")
 
     out += ["## 仮想売買", ""]
@@ -583,21 +690,29 @@ def main() -> int:
     results: list[Result] = []
     errors: list[str] = []
     trade_logs: dict[str, str] = {}
+    # 1) テクニカル分析（全銘柄）
     for s in stocks:
         try:
             r = analyze(s, fetch_prices(s.ticker), cfg)
-            if cfg["show_news"] and r.signal in ("BUY", "SELL"):
-                r.headlines = fetch_headlines(s.ticker)
             results.append(r)
-            save_result(con, r)
-            if cfg["paper_trading"]:
-                log = update_paper_trade(con, r, cfg)
-                if log:
-                    trade_logs[s.ticker] = log
             print(f"  {s.ticker:10s} {r.signal:5s} score={r.score:3d} RSI={r.rsi:5.1f} vol={r.vol_ratio:.1f}")
         except Exception as e:  # 1銘柄の失敗で全体を止めない
             errors.append(f"{s.ticker}: {e}")
             print(f"  {s.ticker:10s} ERROR {e}")
+
+    # 2) AI分析（候補銘柄だけ）
+    apply_ai(results, cfg)
+
+    # 3) 保存・仮想売買
+    for r in results:
+        if cfg["show_news"] and r.signal in ("BUY", "SELL") and not r.ai:
+            r.headlines = fetch_headlines(r.stock.ticker)
+        save_result(con, r)
+        save_ai(con, r)
+        if cfg["paper_trading"]:
+            log = update_paper_trade(con, r, cfg)
+            if log:
+                trade_logs[r.stock.ticker] = log
     con.commit()
 
     report = paper_report(con) if cfg["paper_trading"] else ""

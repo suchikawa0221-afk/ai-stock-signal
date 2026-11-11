@@ -9,5 +9,11 @@
   "earnings_warning_days": 7,
   "notify_when_no_signal": true,
   "show_news": true,
-  "paper_trading": true
+  "paper_trading": true,
+  "ai_enabled": true,
+  "ai_models": ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-2.5-flash"],
+  "ai_web_search": true,
+  "ai_max_calls": 8,
+  "ai_interval_sec": 8,
+  "ai_min_score": 25
 }
