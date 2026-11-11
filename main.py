@@ -583,7 +583,7 @@ def build_markdown(results: list[Result], trade_logs: dict[str, str], report: st
             out.append("")
             return
         for r in rows:
-            out.append(f"### {r.stock.ticker} {r.stock.name}（{score_text(r)}）")
+            out.append(f"### {r.stock.ticker} {r.stock.name} ― {score_text(r)}")
             out.append("")
             out.append(f"- 終値 {fmt_price(r)} ／ RSI {r.rsi:.0f} ／ 出来高 平均比{r.vol_ratio:.1f}倍")
             for s in r.reasons:
