@@ -55,7 +55,9 @@ DEFAULT_CONFIG = {
     "ai_enabled": True,
     "ai_models": ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-2.5-flash"],
     "ai_web_search": True,
-    "ai_max_calls": 8,
+    "ai_max_calls": 10,
+    "buy_total": 72,
+    "buy_tech_min": 60,
     "ai_interval_sec": 8,
     "ai_min_score": 25,
 }
@@ -253,10 +255,11 @@ def apply_ai(results: list[Result], cfg: dict) -> None:
     if not cfg.get("ai_enabled") or not ai_analysis.api_key():
         print("（GEMINI_API_KEY 未設定のためAI分析はスキップ）")
         return
+    # 候補・保有中を優先し、残りはテクニカルの高い順。上限まで全銘柄をAI評価する
     prio = {"BUY": 0, "SELL": 1, "WATCH": 2}
     targets = sorted(
-        [r for r in results if r.signal in prio or r.stock.entry_price],
-        key=lambda r: (prio.get(r.signal, 3), -r.score),
+        results,
+        key=lambda r: (0 if r.stock.entry_price else 1, prio.get(r.signal, 3), -r.score),
     )[: int(cfg["ai_max_calls"])]
     for i, r in enumerate(targets):
         if i:
@@ -272,6 +275,20 @@ def apply_ai(results: list[Result], cfg: dict) -> None:
         if r.signal == "BUY" and (r.ai.total < cfg["ai_min_score"] or r.ai.stance == "弱気"):
             r.signal = "WATCH"
             r.reasons.append(f"AI評価が低いため監視に変更（{r.ai.total}/50・{r.ai.stance}）")
+        # 逆に、テクニカルが基準にあと少し届かなくても、総合スコア（テクニカル＋AI）が高ければ買い候補に上げる。
+        # ただし MACD が上向き・テクニカル最低点・AIが弱気でない、の条件は必ず満たすこと。
+        elif (
+            r.signal in ("WATCH", "NONE")
+            and r.total >= cfg["buy_total"]
+            and r.score >= cfg["buy_tech_min"]
+            and r.macd > r.macd_signal
+            and r.ai.stance != "弱気"
+        ):
+            r.signal = "BUY"
+            r.reasons.append(f"総合スコアが高いため買い候補に（総合{r.total}・テクニカル{r.score}・AI{r.ai.total}/50）")
+        elif r.signal == "NONE" and r.total >= cfg["buy_total"] - 8 and r.ai.stance != "弱気":
+            r.signal = "WATCH"
+            r.reasons.append(f"AI評価が高いため監視に追加（総合{r.total}）")
 
 
 def analyze(stock: Stock, df: pd.DataFrame, cfg: dict) -> Result:
@@ -477,7 +494,7 @@ def update_paper_trade(con: sqlite3.Connection, r: Result, cfg: dict) -> str | N
         if not closed_today:
             con.execute(
                 "INSERT INTO paper_trades (ticker,name,market,entry_date,entry_price,entry_score) VALUES (?,?,?,?,?,?)",
-                (r.stock.ticker, r.stock.name, r.stock.market, d, r.close, r.score),
+                (r.stock.ticker, r.stock.name, r.stock.market, d, r.close, r.total),
             )
             return f"仮想購入 {r.stock.ticker} @ {r.close:,.2f}"
     return None
@@ -602,6 +619,15 @@ def build_markdown(results: list[Result], trade_logs: dict[str, str], report: st
             for h in r.headlines:
                 out.append(f"- 📰 {h}")
             out.append("")
+
+    top = [r for r in sorted(results, key=lambda r: -r.total) if r.signal != "SELL"][:3]
+    if top:
+        out.append("## ⭐ 総合スコア上位")
+        out.append("")
+        for i, r in enumerate(top, 1):
+            stance = f"・AI{r.ai.stance}" if r.ai else ""
+            out.append(f"{i}. **{r.stock.ticker} {r.stock.name}** 総合{r.total}（{SIGNAL_LABEL[r.signal]}{stance}）")
+        out.append("")
 
     section("🟢 買い候補", sorted([r for r in results if r.signal == "BUY"], key=lambda r: -r.total), with_stop=True)
     section("🔴 売り・警戒", [r for r in results if r.signal == "SELL"])

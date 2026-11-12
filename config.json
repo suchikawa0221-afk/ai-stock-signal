@@ -13,7 +13,9 @@
   "ai_enabled": true,
   "ai_models": ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-2.5-flash"],
   "ai_web_search": true,
-  "ai_max_calls": 8,
+  "ai_max_calls": 10,
+  "buy_total": 72,
+  "buy_tech_min": 60,
   "ai_interval_sec": 8,
   "ai_min_score": 25
 }
