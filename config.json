@@ -16,6 +16,10 @@
   "ai_max_calls": 10,
   "buy_total": 72,
   "buy_tech_min": 60,
+  "screen_enabled": true,
+  "screen_universe_jp": "universe_jp.csv",
+  "screen_top_n": 5,
+  "screen_min_tech": 60,
   "ai_interval_sec": 8,
   "ai_min_score": 25
 }

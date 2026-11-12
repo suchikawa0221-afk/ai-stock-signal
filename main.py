@@ -58,6 +58,10 @@ DEFAULT_CONFIG = {
     "ai_max_calls": 10,
     "buy_total": 72,
     "buy_tech_min": 60,
+    "screen_enabled": True,
+    "screen_universe_jp": "universe_jp.csv",
+    "screen_top_n": 5,
+    "screen_min_tech": 60,
     "ai_interval_sec": 8,
     "ai_min_score": 25,
 }
@@ -81,6 +85,7 @@ class Stock:
     sector: str = ""
     entry_price: float | None = None  # 実際に保有している場合の取得単価
     memo: str = ""
+    screened: bool = False  # TOPIX100から自動ピックアップした銘柄
 
 
 def load_watchlist() -> list[Stock]:
@@ -291,6 +296,55 @@ def apply_ai(results: list[Result], cfg: dict) -> None:
             r.reasons.append(f"AI評価が高いため監視に追加（総合{r.total}）")
 
 
+def earnings_warning(ticker: str, today: dt.date, cfg: dict) -> str | None:
+    ed = fetch_earnings_date(ticker)
+    if ed and 0 <= (ed - today).days <= cfg["earnings_warning_days"]:
+        return f"決算発表予定 {ed:%m/%d}（発表前後は値動きが荒くなりやすい）"
+    return None
+
+
+def load_universe(path: Path, exclude: set[str]) -> list[Stock]:
+    """自動ピックアップ用の銘柄一覧（TOPIX100など）。監視リストにある銘柄は除く。"""
+    if not path.exists():
+        return []
+    with open(path, encoding="utf-8-sig", newline="") as f:
+        rows = list(csv.DictReader(f))
+    out = []
+    for r in rows:
+        t = (r.get("ticker") or "").strip()
+        if not t or t in exclude:
+            continue
+        out.append(
+            Stock(
+                ticker=t,
+                name=(r.get("name") or t).strip(),
+                market="JP" if t.endswith(".T") else "US",
+                memo=f"TOPIX100自動ピックアップ（{(r.get('industry') or '').strip()}）",
+                screened=True,
+            )
+        )
+    return out
+
+
+def screen(universe: list[Stock], cfg: dict) -> list[Result]:
+    """全銘柄をテクニカルで採点し、上位だけ返す（AIはこの後で上位にだけかける）。"""
+    scored: list[Result] = []
+    for s in universe:
+        try:
+            scored.append(analyze(s, fetch_prices(s.ticker, s.market), cfg))
+        except Exception as e:
+            print(f"  [screen] {s.ticker} ERROR {e}")
+    print(f"スクリーニング：{len(scored)}/{len(universe)} 銘柄を採点")
+    picks = [r for r in scored if r.signal != "SELL" and r.score >= cfg["screen_min_tech"]]
+    picks = sorted(picks, key=lambda r: (-r.score, -r.vol_ratio))[: int(cfg["screen_top_n"])]
+    for r in picks:
+        w = earnings_warning(r.stock.ticker, r.date, cfg)
+        if w:
+            r.warnings.append(w)
+        print(f"  [pick] {r.stock.ticker} {r.stock.name} score={r.score}")
+    return picks
+
+
 def analyze(stock: Stock, df: pd.DataFrame, cfg: dict) -> Result:
     df = add_indicators(df)
     last, prev = df.iloc[-1], df.iloc[-2]
@@ -369,10 +423,11 @@ def analyze(stock: Stock, df: pd.DataFrame, cfg: dict) -> Result:
     # --- イベントリスク
     if stock.sector in ("bio", "biotech", "バイオ"):
         warnings.append("バイオ株：治験結果・FDA関連ニュースで急変動の恐れ")
-    ed = fetch_earnings_date(stock.ticker)
     today = df.index[-1].date()
-    if ed and 0 <= (ed - today).days <= cfg["earnings_warning_days"]:
-        warnings.append(f"決算発表予定 {ed:%m/%d}（発表前後は値動きが荒くなりやすい）")
+    if not stock.screened:  # スクリーニング（100銘柄）では通信を減らすため、上位に残った銘柄だけ後で確認
+        w = earnings_warning(stock.ticker, today, cfg)
+        if w:
+            warnings.append(w)
     stale = (dt.date.today() - today).days
     if stale > 5:
         warnings.append(f"データが {stale} 日前のもの（休場・上場廃止等を確認）")
@@ -600,7 +655,8 @@ def build_markdown(results: list[Result], trade_logs: dict[str, str], report: st
             out.append("")
             return
         for r in rows:
-            out.append(f"### {r.stock.ticker} {r.stock.name} ― {score_text(r)}")
+            mark = "🔍 " if r.stock.screened else ""
+            out.append(f"### {mark}{r.stock.ticker} {r.stock.name} ― {score_text(r)}")
             out.append("")
             out.append(f"- 終値 {fmt_price(r)} ／ RSI {r.rsi:.0f} ／ 出来高 平均比{r.vol_ratio:.1f}倍")
             for s in r.reasons:
@@ -629,6 +685,18 @@ def build_markdown(results: list[Result], trade_logs: dict[str, str], report: st
             out.append(f"{i}. **{r.stock.ticker} {r.stock.name}** 総合{r.total}（{SIGNAL_LABEL[r.signal]}{stance}）")
         out.append("")
 
+    picked = sorted([r for r in results if r.stock.screened], key=lambda r: -r.total)
+    if picked:
+        out.append("## 🔍 TOPIX100から自動ピックアップ")
+        out.append("")
+        out.append("日本の大型株100銘柄をテクニカルで採点し、上位をAIで評価した結果です（監視リストの銘柄は除く）。")
+        out.append("")
+        for r in picked:
+            out.append(f"- **{r.stock.ticker} {r.stock.name}**：{SIGNAL_LABEL[r.signal]} ／ {score_text(r)}")
+            if r.ai:
+                out.append(f"  - 🤖 {r.ai.stance}：{r.ai.summary}")
+        out.append("")
+
     section("🟢 買い候補", sorted([r for r in results if r.signal == "BUY"], key=lambda r: -r.total), with_stop=True)
     section("🔴 売り・警戒", [r for r in results if r.signal == "SELL"])
     section("🟡 監視（もう少しで買い条件）", sorted([r for r in results if r.signal == "WATCH"], key=lambda r: -r.total))
@@ -641,7 +709,7 @@ def build_markdown(results: list[Result], trade_logs: dict[str, str], report: st
     for r in sorted(results, key=lambda r: -r.total):
         ai = f"{r.ai.total}/50 {r.ai.stance}" if r.ai else "－"
         out.append(
-            f"| {r.stock.ticker} {r.stock.name} | {SIGNAL_LABEL[r.signal]} | {r.total} | {r.score} | {ai} "
+            f"| {'🔍 ' if r.stock.screened else ''}{r.stock.ticker} {r.stock.name} | {SIGNAL_LABEL[r.signal]} | {r.total} | {r.score} | {ai} "
             f"| {fmt_price(r)} | {r.rsi:.0f} | {r.vol_ratio:.1f} |"
         )
     out += ["", "総合＝テクニカル×0.5＋AI（業績25・材料15・リスク10）。AI未評価の銘柄はテクニカルのみ。"]
@@ -735,8 +803,18 @@ def main() -> int:
             errors.append(f"{s.ticker}: {e}")
             print(f"  {s.ticker:10s} ERROR {e}")
 
-    # 2) AI分析（候補銘柄だけ）
+    # 1b) TOPIX100 からテクニカル上位を自動ピックアップ
+    picks: list[Result] = []
+    if cfg.get("screen_enabled") and args.market in ("jp", "all"):
+        watch = {s.ticker for s in load_watchlist()}
+        picks = screen(load_universe(ROOT / cfg["screen_universe_jp"], watch), cfg)
+
+    # 2) AI分析（監視リスト＋ピックアップ銘柄）
     apply_ai(results, cfg)
+    if picks:
+        time.sleep(float(cfg["ai_interval_sec"]))
+        apply_ai(picks, {**cfg, "ai_max_calls": len(picks)})
+        results += picks
 
     # 3) 保存・仮想売買
     for r in results:
