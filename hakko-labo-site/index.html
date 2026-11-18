@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>発酵ラボ基礎｜発酵ジャム・発酵だしと乳酸菌の小ロット受託発酵</title>
+<meta name="description" content="発酵ラボ基礎は、発酵ジャム・発酵だしの製造販売と、1L〜15Lの小ロット乳酸菌受託発酵を行う発酵の研究所です。試作・商品開発・研究用途のご相談はお気軽に。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Shippori+Mincho:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* ===== 色やサイズの設定（ここを変えるとサイト全体の色が変わります） ===== */
+:root{
+  --bg:#fbf8f2;        /* 背景（生成り色） */
+  --bg-alt:#f3ede2;    /* 交互の背景 */
+  --ink:#2b2622;       /* 文字 */
+  --muted:#6f655b;     /* 薄い文字 */
+  --main:#3f5a3c;      /* メインカラー（深い緑＝発酵・自然） */
+  --main-dark:#2c4029;
+  --accent:#c0763a;    /* アクセント（麹・味噌のような琥珀色） */
+  --line:#e2d9ca;
+  --white:#fff;
+  --radius:14px;
+  --shadow:0 10px 30px rgba(60,45,30,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{font-family:"Noto Sans JP",sans-serif;background:var(--bg);color:var(--ink);line-height:1.9;font-size:16px;letter-spacing:.03em}
+img,svg{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+.container{width:min(1120px,100% - 32px);margin-inline:auto}
+.mincho{font-family:"Shippori Mincho",serif}
+section{padding:96px 0}
+.sec-alt{background:var(--bg-alt)}
+.sec-head{text-align:center;margin-bottom:56px}
+.sec-head .en{display:block;color:var(--accent);font-size:13px;letter-spacing:.3em;font-weight:500;margin-bottom:8px}
+.sec-head h2{font-family:"Shippori Mincho",serif;font-size:clamp(26px,4vw,36px);font-weight:700;line-height:1.5}
+.sec-head p{color:var(--muted);margin-top:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 32px;border-radius:999px;font-weight:700;transition:.25s;border:2px solid transparent;cursor:pointer;font-size:15px}
+.btn-main{background:var(--main);color:#fff}
+.btn-main:hover{background:var(--main-dark);transform:translateY(-2px)}
+.btn-line{border-color:var(--main);color:var(--main);background:transparent}
+.btn-line:hover{background:var(--main);color:#fff}
+.btn-accent{background:var(--accent);color:#fff}
+.btn-accent:hover{filter:brightness(.92);transform:translateY(-2px)}
+
+/* ===== ヘッダー ===== */
+header{position:fixed;inset:0 0 auto 0;z-index:50;background:rgba(251,248,242,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:68px}
+.logo{display:flex;align-items:center;gap:10px;font-family:"Shippori Mincho",serif;font-weight:700;font-size:20px}
+.logo small{display:block;font-family:"Noto Sans JP";font-size:10px;letter-spacing:.2em;color:var(--muted);font-weight:500;line-height:1}
+.nav ul{display:flex;gap:28px;list-style:none;font-size:14px;font-weight:500}
+.nav ul a:hover{color:var(--accent)}
+.nav .btn{padding:10px 22px;font-size:14px}
+.menu-btn{display:none;background:none;border:none;width:44px;height:44px;cursor:pointer}
+.menu-btn span{display:block;width:24px;height:2px;background:var(--ink);margin:6px auto;transition:.3s}
+
+/* ===== ファーストビュー ===== */
+.hero{padding:150px 0 96px;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;width:620px;height:620px;border-radius:50%;background:radial-gradient(circle,#e9dcc4 0%,transparent 70%);right:-160px;top:-80px;z-index:-1}
+.hero-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center}
+.hero .tag{display:inline-block;background:var(--white);border:1px solid var(--line);padding:6px 16px;border-radius:999px;font-size:13px;color:var(--main);font-weight:500;margin-bottom:24px}
+.hero h1{font-family:"Shippori Mincho",serif;font-size:clamp(32px,5.4vw,56px);line-height:1.45;font-weight:700}
+.hero h1 em{font-style:normal;color:var(--main);background:linear-gradient(transparent 70%,#e8d3b3 70%)}
+.hero p.lead{margin:28px 0 36px;color:var(--muted);font-size:17px}
+.hero-btns{display:flex;gap:16px;flex-wrap:wrap}
+.hero-visual{position:relative;aspect-ratio:1/1;max-width:480px;margin-left:auto;width:100%}
+.hero-badges{display:flex;gap:28px;margin-top:44px;flex-wrap:wrap}
+.hero-badges div{font-size:13px;color:var(--muted)}
+.hero-badges b{display:block;font-family:"Shippori Mincho",serif;font-size:28px;color:var(--ink);line-height:1.3}
+
+/* ===== 3つの事業 ===== */
+.biz-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.biz-card{background:var(--white);border-radius:var(--radius);padding:36px 28px;box-shadow:var(--shadow);transition:.3s;display:flex;flex-direction:column}
+.biz-card:hover{transform:translateY(-6px)}
+.biz-card .num{font-family:"Shippori Mincho",serif;color:var(--accent);font-size:14px;letter-spacing:.2em}
+.biz-card h3{font-family:"Shippori Mincho",serif;font-size:22px;margin:8px 0 12px}
+.biz-card p{color:var(--muted);font-size:15px;flex:1}
+.biz-card .icon{width:72px;height:72px;margin-bottom:20px}
+.biz-card a.more{margin-top:20px;color:var(--main);font-weight:700;font-size:14px}
+.biz-card a.more:hover{color:var(--accent)}
+
+/* ===== 選ばれる理由 ===== */
+.reason-list{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
+.reason{display:flex;gap:20px;background:var(--white);padding:28px;border-radius:var(--radius);border:1px solid var(--line)}
+.reason .n{flex:none;width:52px;height:52px;border-radius:50%;background:var(--main);color:#fff;display:grid;place-items:center;font-family:"Shippori Mincho",serif;font-size:20px}
+.reason h3{font-size:18px;margin-bottom:6px}
+.reason p{color:var(--muted);font-size:15px}
+
+/* ===== 商品 ===== */
+.products{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.product{background:var(--white);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.product .ph{aspect-ratio:4/3;display:grid;place-items:center;position:relative}
+.product .label{position:absolute;top:12px;left:12px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px}
+.product .body{padding:20px;display:flex;flex-direction:column;flex:1}
+.product h3{font-size:17px;line-height:1.6}
+.product .spec{font-size:13px;color:var(--muted);margin:6px 0 12px;flex:1}
+.product .price{font-family:"Shippori Mincho",serif;font-size:22px;font-weight:700}
+.product .price small{font-size:12px;font-family:"Noto Sans JP";color:var(--muted);font-weight:400}
+.cat-title{display:flex;align-items:center;gap:16px;font-family:"Shippori Mincho",serif;font-size:22px;margin:0 0 24px}
+.cat-title::after{content:"";flex:1;height:1px;background:var(--line)}
+.cat-title + .products{margin-bottom:56px}
+.subscribe{display:flex;align-items:center;justify-content:space-between;gap:24px;background:var(--main);color:#fff;border-radius:var(--radius);padding:32px 40px;flex-wrap:wrap}
+.subscribe h3{font-family:"Shippori Mincho",serif;font-size:22px}
+.subscribe p{opacity:.85;font-size:14px}
+
+/* ===== 受託発酵 ===== */
+.oem-intro{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;margin-bottom:72px}
+.oem-intro h3{font-family:"Shippori Mincho",serif;font-size:clamp(22px,3vw,28px);line-height:1.6;margin-bottom:20px}
+.oem-intro p{color:var(--muted)}
+.check{list-style:none;margin-top:20px;display:grid;gap:8px}
+.check li{padding-left:28px;position:relative;font-weight:500}
+.check li::before{content:"";position:absolute;left:0;top:.55em;width:16px;height:16px;border-radius:50%;background:var(--main)}
+.check li::after{content:"";position:absolute;left:5px;top:calc(.55em + 4px);width:6px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg)}
+.uses{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.uses span{background:var(--white);border:1px solid var(--line);padding:6px 14px;border-radius:999px;font-size:13px}
+
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;align-items:stretch}
+.plan{background:var(--white);border-radius:var(--radius);padding:36px 28px;border:1px solid var(--line);display:flex;flex-direction:column;position:relative}
+.plan.pop{border:2px solid var(--accent);box-shadow:0 16px 40px rgba(192,118,58,.18);transform:translateY(-8px)}
+.plan .ribbon{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:12px;font-weight:700;padding:4px 18px;border-radius:999px;white-space:nowrap}
+.plan .pname{font-size:14px;color:var(--accent);font-weight:700;letter-spacing:.1em}
+.plan h3{font-family:"Shippori Mincho",serif;font-size:24px}
+.plan .vol{display:inline-block;background:var(--bg-alt);border-radius:8px;padding:2px 12px;font-size:14px;font-weight:700;margin:8px 0 16px;color:var(--main)}
+.plan .fee{font-family:"Shippori Mincho",serif;font-size:38px;font-weight:700;line-height:1.2}
+.plan .fee small{font-size:14px;font-family:"Noto Sans JP";font-weight:400;color:var(--muted)}
+.plan .desc{color:var(--muted);font-size:14px;margin:12px 0 20px;min-height:3.6em}
+.plan ul{list-style:none;border-top:1px dashed var(--line);padding-top:20px;display:grid;gap:10px;font-size:14px;flex:1}
+.plan li{padding-left:24px;position:relative}
+.plan li::before{content:"✓";position:absolute;left:0;color:var(--main);font-weight:700}
+.plan li.no{color:#b3a999}
+.plan li.no::before{content:"—";color:#c9bfb0}
+.plan .meta{font-size:13px;color:var(--muted);margin:20px 0;background:var(--bg);padding:12px 14px;border-radius:10px}
+.plan .btn{width:100%}
+
+.table-wrap{overflow-x:auto;margin-top:64px;background:var(--white);border-radius:var(--radius);border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;min-width:560px;font-size:15px}
+th,td{padding:16px 20px;border-bottom:1px solid var(--line);text-align:left}
+thead th{background:var(--main);color:#fff;font-weight:500}
+tbody tr:last-child td{border-bottom:none}
+td.p{font-weight:700;white-space:nowrap}
+.note{font-size:13px;color:var(--muted);margin-top:14px}
+
+/* ===== 流れ ===== */
+.flow{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;counter-reset:step}
+.step{background:var(--white);border-radius:var(--radius);padding:24px 16px;text-align:center;position:relative;border:1px solid var(--line)}
+.step::before{counter-increment:step;content:"STEP " counter(step);display:block;font-size:11px;letter-spacing:.2em;color:var(--accent);font-weight:700}
+.step h3{font-size:16px;margin:6px 0}
+.step p{font-size:13px;color:var(--muted);line-height:1.7}
+.step .d{display:inline-block;margin-top:10px;font-size:12px;background:var(--bg-alt);padding:2px 10px;border-radius:999px}
+
+/* ===== 実績 ===== */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-bottom:56px}
+.stat{text-align:center;padding:32px 16px;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow)}
+.stat b{display:block;font-family:"Shippori Mincho",serif;font-size:44px;color:var(--main);line-height:1.2}
+.stat b small{font-size:18px}
+.stat span{font-size:14px;color:var(--muted)}
+.cases{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.case{background:var(--white);border-radius:var(--radius);padding:28px;border:1px solid var(--line)}
+.case .who{font-size:12px;color:var(--accent);font-weight:700;letter-spacing:.1em}
+.case h3{font-size:17px;margin:6px 0 10px;line-height:1.6}
+.case p{font-size:14px;color:var(--muted)}
+.case .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.case .tags span{font-size:12px;background:var(--bg-alt);padding:2px 10px;border-radius:6px}
+
+/* ===== お客様の声 ===== */
+.voices{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.voice{background:var(--white);border-radius:var(--radius);padding:28px;position:relative}
+.voice::before{content:"“";font-family:"Shippori Mincho",serif;font-size:64px;color:var(--line);position:absolute;top:-6px;left:16px;line-height:1}
+.voice p{position:relative;font-size:15px}
+.voice .by{margin-top:16px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:10px}
+.voice .av{width:36px;height:36px;border-radius:50%;background:var(--bg-alt);display:grid;place-items:center;font-size:14px}
+.stars{color:var(--accent);letter-spacing:2px;font-size:14px}
+
+/* ===== こだわり／品質 ===== */
+.quality{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.q{text-align:center;padding:12px}
+.q .ic{width:88px;height:88px;border-radius:50%;background:var(--white);display:grid;place-items:center;margin:0 auto 18px;box-shadow:var(--shadow)}
+.q h3{font-size:18px;margin-bottom:8px}
+.q p{font-size:14px;color:var(--muted)}
+
+/* ===== FAQ ===== */
+.faq{max-width:820px;margin:0 auto;display:grid;gap:12px}
+details{background:var(--white);border-radius:12px;border:1px solid var(--line)}
+summary{list-style:none;cursor:pointer;padding:20px 56px 20px 60px;font-weight:700;position:relative}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"Q";position:absolute;left:22px;top:18px;font-family:"Shippori Mincho",serif;color:var(--main);font-size:20px}
+summary::after{content:"+";position:absolute;right:24px;top:16px;font-size:24px;color:var(--muted);transition:.3s}
+details[open] summary::after{transform:rotate(45deg)}
+details .a{padding:0 24px 22px 60px;color:var(--muted);font-size:15px;position:relative}
+details .a::before{content:"A";position:absolute;left:22px;top:-4px;font-family:"Shippori Mincho",serif;color:var(--accent);font-size:20px}
+
+/* ===== お知らせ ===== */
+.news{max-width:820px;margin:0 auto;list-style:none;border-top:1px solid var(--line)}
+.news li{display:flex;gap:20px;padding:18px 4px;border-bottom:1px solid var(--line);align-items:baseline;flex-wrap:wrap}
+.news time{font-size:14px;color:var(--muted);min-width:96px}
+.news .cat{font-size:11px;border:1px solid var(--main);color:var(--main);padding:1px 10px;border-radius:999px}
+
+/* ===== 会社概要 ===== */
+.about{display:grid;grid-template-columns:1fr 1.2fr;gap:56px;align-items:start}
+.message h3{font-family:"Shippori Mincho",serif;font-size:24px;line-height:1.7;margin-bottom:20px}
+.message p{color:var(--muted);margin-bottom:14px}
+.message .sign{text-align:right;font-family:"Shippori Mincho",serif;margin-top:20px;color:var(--ink)}
+.company{width:100%;min-width:0;background:var(--white);border-radius:var(--radius);overflow:hidden;border:1px solid var(--line)}
+.company th{width:30%;background:var(--bg-alt);font-weight:500;font-size:14px;vertical-align:top}
+.company td{font-size:14px}
+
+/* ===== お問い合わせ ===== */
+.contact-box{background:var(--white);border-radius:20px;padding:48px;box-shadow:var(--shadow);max-width:820px;margin:0 auto}
+.contact-tel{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:36px;text-align:center}
+.contact-tel div{flex:1;min-width:220px;background:var(--bg);border-radius:12px;padding:20px}
+.contact-tel b{display:block;font-family:"Shippori Mincho",serif;font-size:24px}
+.contact-tel span{font-size:13px;color:var(--muted)}
+form{display:grid;gap:20px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+label{display:block;font-size:14px;font-weight:700;margin-bottom:6px}
+label .req{background:var(--accent);color:#fff;font-size:11px;padding:1px 8px;border-radius:4px;margin-left:8px;font-weight:500}
+input,select,textarea{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:15px;background:var(--bg);color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--main);border-color:transparent;background:#fff}
+.radio-row{display:flex;flex-wrap:wrap;gap:10px}
+.radio-row label{font-weight:400;display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--line);padding:8px 14px;border-radius:999px;margin:0;cursor:pointer}
+.radio-row input{width:auto}
+.form-msg{display:none;text-align:center;background:#eef3ec;color:var(--main);padding:16px;border-radius:10px;font-weight:700}
+
+/* ===== CTA帯 ===== */
+.cta{background:linear-gradient(135deg,var(--main),#5a7a4f);color:#fff;text-align:center;padding:72px 0}
+.cta h2{font-family:"Shippori Mincho",serif;font-size:clamp(22px,3.6vw,32px);line-height:1.6}
+.cta p{opacity:.85;margin:12px 0 28px}
+.cta .btn-line{border-color:#fff;color:#fff}
+.cta .btn-line:hover{background:#fff;color:var(--main)}
+
+/* ===== フッター ===== */
+footer{background:#24201c;color:#cfc6ba;padding:64px 0 28px;font-size:14px}
+.foot{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:32px}
+footer .logo{color:#fff;margin-bottom:14px}
+footer .logo small{color:#9d9387}
+footer h4{color:#fff;font-size:14px;margin-bottom:12px}
+footer ul{list-style:none;display:grid;gap:6px}
+footer a:hover{color:#fff}
+.copy{text-align:center;border-top:1px solid #3b352f;margin-top:40px;padding-top:24px;font-size:12px;color:#8d8377}
+
+/* ===== ふわっと表示 ===== */
+.fade{opacity:0;transform:translateY(24px);transition:opacity .8s,transform .8s}
+.fade.show{opacity:1;transform:none}
+.to-top{position:fixed;right:16px;bottom:16px;width:48px;height:48px;border-radius:50%;background:var(--main);color:#fff;display:grid;place-items:center;opacity:0;pointer-events:none;transition:.3s;z-index:40;box-shadow:var(--shadow)}
+.to-top.show{opacity:1;pointer-events:auto}
+
+/* ===== スマホ・タブレット対応 ===== */
+@media (max-width:1000px){
+  .products{grid-template-columns:repeat(2,1fr)}
+  .flow{grid-template-columns:repeat(3,1fr)}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .foot{grid-template-columns:1fr 1fr}
+}
+@media (max-width:860px){
+  section{padding:72px 0}
+  .menu-btn{display:block}
+  .nav ul,.nav .btn{display:none}
+  .nav.open ul{display:flex;flex-direction:column;position:absolute;top:68px;left:0;right:0;background:var(--bg);padding:24px 16px;gap:16px;border-bottom:1px solid var(--line);font-size:16px}
+  .nav.open .menu-btn span:nth-child(1){transform:translateY(8px) rotate(45deg)}
+  .nav.open .menu-btn span:nth-child(2){opacity:0}
+  .nav.open .menu-btn span:nth-child(3){transform:translateY(-8px) rotate(-45deg)}
+  .hero{padding:110px 0 64px}
+  .hero-grid,.oem-intro,.about{grid-template-columns:1fr;gap:36px}
+  .hero-visual{margin:0 auto;max-width:340px}
+  .biz-grid,.plans,.cases,.voices,.quality,.reason-list{grid-template-columns:1fr}
+  .plan.pop{transform:none}
+  .plans{gap:32px}
+  .contact-box{padding:28px 20px}
+  .row2{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .products{grid-template-columns:1fr}
+  .flow{grid-template-columns:1fr 1fr}
+  .foot{grid-template-columns:1fr}
+  .subscribe{padding:28px 22px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== ヘッダー ===================== -->
+<header>
+  <div class="container nav" id="nav">
+    <a href="#top" class="logo" aria-label="発酵ラボ基礎 トップへ">
+      <svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="#3f5a3c"/><path d="M14 11h12M17 11v8l-6 10a2 2 0 0 0 1.7 3h14.6a2 2 0 0 0 1.7-3l-6-10v-8" fill="none" stroke="#fbf8f2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18" cy="26" r="1.6" fill="#e8b98a"/><circle cx="23" cy="24" r="1.1" fill="#e8b98a"/></svg>
+      <span>発酵ラボ基礎<small>HAKKO LAB KISO</small></span>
+    </a>
+    <ul>
+      <li><a href="#business">事業内容</a></li>
+      <li><a href="#products">商品</a></li>
+      <li><a href="#oem">受託発酵・料金</a></li>
+      <li><a href="#works">実績</a></li>
+      <li><a href="#faq">よくある質問</a></li>
+      <li><a href="#company">会社概要</a></li>
+    </ul>
+    <a href="#contact" class="btn btn-main">お問い合わせ</a>
+    <button class="menu-btn" id="menuBtn" aria-label="メニューを開く"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ===================== ファーストビュー ===================== -->
+<section class="hero">
+  <div class="container hero-grid">
+    <div class="fade">
+      <span class="tag">🌿 乳酸菌の受託発酵 1L〜15L 対応</span>
+      <h1>発酵の力を、<br><em>暮らし</em>と<br><em>ものづくり</em>に。</h1>
+      <p class="lead">発酵ラボ基礎は、乳酸菌の力で仕上げる「発酵ジャム」「発酵だし」をつくる小さな発酵の研究所です。<br>培ってきた発酵技術をもとに、<strong>1リットルからの小ロット受託発酵</strong>で、企業・研究機関・飲食店さまの試作と商品開発をお手伝いします。</p>
+      <div class="hero-btns">
+        <a href="#oem" class="btn btn-main">受託発酵の料金を見る</a>
+        <a href="#products" class="btn btn-line">発酵食品を見る</a>
+      </div>
+      <div class="hero-badges">
+        <div><b>1L〜</b>小ロット対応</div>
+        <div><b>最短2週間</b>で試作お届け</div>
+        <div><b>NDA</b>締結無料</div>
+      </div>
+    </div>
+    <div class="hero-visual fade" aria-hidden="true">
+      <!-- イラスト：発酵タンクと瓶（写真が用意できたら差し替えてください） -->
+      <svg viewBox="0 0 400 400">
+        <circle cx="200" cy="200" r="190" fill="#efe4d1"/>
+        <circle cx="200" cy="200" r="150" fill="#f7efe1"/>
+        <g opacity=".55" fill="#c0763a">
+          <circle cx="90" cy="120" r="6"/><circle cx="320" cy="110" r="4"/><circle cx="300" cy="300" r="7"/><circle cx="80" cy="280" r="4"/><circle cx="340" cy="210" r="5"/>
+        </g>
+        <!-- 発酵タンク -->
+        <rect x="150" y="90" width="110" height="200" rx="28" fill="#3f5a3c"/>
+        <rect x="165" y="130" width="80" height="140" rx="16" fill="#f3e3c4"/>
+        <rect x="165" y="190" width="80" height="80" rx="0" fill="#e2b77f"/>
+        <rect x="165" y="254" width="80" height="16" rx="8" fill="#e2b77f"/>
+        <circle cx="185" cy="230" r="5" fill="#fff" opacity=".8"/><circle cx="210" cy="212" r="3.5" fill="#fff" opacity=".8"/><circle cx="228" cy="240" r="4.5" fill="#fff" opacity=".8"/><circle cx="198" cy="252" r="3" fill="#fff" opacity=".8"/>
+        <rect x="190" y="68" width="30" height="26" rx="6" fill="#2c4029"/>
+        <line x1="165" y1="160" x2="182" y2="160" stroke="#3f5a3c" stroke-width="2"/><line x1="165" y1="180" x2="176" y2="180" stroke="#3f5a3c" stroke-width="2"/>
+        <rect x="160" y="290" width="12" height="30" fill="#2c4029"/><rect x="238" y="290" width="12" height="30" fill="#2c4029"/>
+        <!-- ジャム瓶 -->
+        <rect x="70" y="240" width="72" height="84" rx="14" fill="#b4413c"/>
+        <rect x="66" y="226" width="80" height="20" rx="6" fill="#c0763a"/>
+        <rect x="82" y="266" width="48" height="34" rx="6" fill="#fbf8f2"/>
+        <text x="106" y="289" font-size="13" text-anchor="middle" fill="#3f5a3c" font-family="serif" font-weight="700">発酵</text>
+        <!-- だしパック -->
+        <rect x="268" y="236" width="70" height="90" rx="10" fill="#f8f3ea" stroke="#c0763a" stroke-width="3"/>
+        <rect x="268" y="236" width="70" height="20" rx="8" fill="#c0763a"/>
+        <text x="303" y="292" font-size="15" text-anchor="middle" fill="#2b2622" font-family="serif" font-weight="700">だし</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 事業内容 ===================== -->
+<section id="business" class="sec-alt">
+  <div class="container">
+    <div class="sec-head fade"><span class="en">BUSINESS</span><h2>3つの事業で、発酵を届ける</h2><p>つくる・売る・支える。発酵に関わるすべてを一貫して行っています。</p></div>
+    <div class="biz-grid">
+      <div class="biz-card fade">
+        <svg class="icon" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="36" fill="#f6e3dd"/><rect x="22" y="28" width="28" height="30" rx="7" fill="#b4413c"/><rect x="20" y="22" width="32" height="9" rx="3" fill="#c0763a"/><rect x="28" y="38" width="16" height="11" rx="3" fill="#fff"/></svg>
+        <span class="num">01</span><h3>発酵ジャム</h3>
+        <p>旬の果物を乳酸菌でやさしく発酵。砂糖を控えめにしながら、まろやかな酸味と深いコクを引き出した、からだ想いのジャムです。</p>
+        <a href="#products" class="more">商品を見る →</a>
+      </div>
+      <div class="biz-card fade">
+        <svg class="icon" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="36" fill="#f3e8d6"/><path d="M18 34h36a18 18 0 0 1-36 0z" fill="#c0763a"/><path d="M28 26c0-4 4-4 4-8M38 26c0-4 4-4 4-8" stroke="#3f5a3c" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+        <span class="num">02</span><h3>発酵だし</h3>
+        <p>国産の昆布・かつお・椎茸を発酵させ、うま味を最大化。無添加なのに、いつもの料理がぐっと深い味わいに変わります。</p>
+        <a href="#products" class="more">商品を見る →</a>
+      </div>
+      <div class="biz-card fade">
+        <svg class="icon" viewBox="0 0 72 72" aria-hidden="true"><circle cx="36" cy="36" r="36" fill="#e3ebdf"/><path d="M30 16h12M32 16v14l-10 17a3 3 0 0 0 2.6 4.5h22.8A3 3 0 0 0 50 47L40 30V16" fill="none" stroke="#3f5a3c" stroke-width="3" stroke-linejoin="round"/><circle cx="33" cy="44" r="2.5" fill="#c0763a"/><circle cx="40" cy="41" r="1.8" fill="#c0763a"/></svg>
+        <span class="num">03</span><h3>乳酸菌の受託発酵</h3>
+        <p>1L〜15Lの小ロットで乳酸菌発酵を代行。「大手には頼めない量」「まず試したい」というご相談にお応えします。</p>
+        <a href="#oem" class="more">プランと料金を見る →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 選ばれる理由 ===================== -->
+<section id="reason">
+  <div class="container">
+    <div class="sec-head fade"><span class="en">REASON</span><h2>発酵ラボ基礎が選ばれる理由</h2></div>
+    <div class="reason-list">
+      <div class="reason fade"><div class="n">1</div><div><h3>1リットルからの超小ロット</h3><p>一般的な受託先では数百L〜が最低ロット。当ラボは1Lから受け付けるので、試作費用とリスクを最小限に抑えられます。</p></div></div>
+      <div class="reason fade"><div class="n">2</div><div><h3>自社商品で培った実践ノウハウ</h3><p>研究だけでなく、実際に発酵食品を製造・販売している現場の知見があるから、「売れる商品づくり」まで見据えたご提案ができます。</p></div></div>
+      <div class="reason fade"><div class="n">3</div><div><h3>データで見える発酵レポート</h3><p>pH・酸度・生菌数の推移をグラフ化した報告書をお渡し。再現性のある条件づくりと、社内説明に使える資料を提供します。</p></div></div>
+      <div class="reason fade"><div class="n">4</div><div><h3>スピード対応・秘密厳守</h3><p>お問い合わせから2営業日以内にご返信。秘密保持契約（NDA）は無料で締結し、レシピや菌株情報を厳重に管理します。</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 商品 ===================== -->
+<section id="products" class="sec-alt">
+  <div class="container">
+    <div class="sec-head fade"><span class="en">PRODUCTS</span><h2>発酵ラボ基礎の商品</h2><p>ご自宅用にも、贈りものにも。すべてラボで一つひとつ手づくりしています。</p></div>
+
+    <h3 class="cat-title fade">発酵ジャム</h3>
+    <div class="products">
+      <article class="product fade"><div class="ph" style="background:#f6dcd6"><span class="label">人気No.1</span><svg width="90" viewBox="0 0 72 80"><rect x="10" y="20" width="52" height="56" rx="12" fill="#c2403b"/><rect x="6" y="8" width="60" height="16" rx="5" fill="#c0763a"/><rect x="20" y="38" width="32" height="20" rx="4" fill="#fff"/></svg></div><div class="body"><h3>発酵いちごジャム</h3><p class="spec">120g｜国産いちご使用・砂糖控えめ</p><p class="price">¥1,080<small>（税込）</small></p></div></article>
+      <article class="product fade"><div class="ph" style="background:#dfdcef"><svg width="90" viewBox="0 0 72 80"><rect x="10" y="20" width="52" height="56" rx="12" fill="#4b3f78"/><rect x="6" y="8" width="60" height="16" rx="5" fill="#c0763a"/><rect x="20" y="38" width="32" height="20" rx="4" fill="#fff"/></svg></div><div class="body"><h3>発酵ブルーベリージャム</h3><p class="spec">120g｜果実感たっぷり</p><p class="price">¥1,080<small>（税込）</small></p></div></article>
+      <article class="product fade"><div class="ph" style="background:#f6ecc8"><span class="label">季節限定</span><svg width="90" viewBox="0 0 72 80"><rect x="10" y="20" width="52" height="56" rx="12" fill="#e2ad2b"/><rect x="6" y="8" width="60" height="16" rx="5" fill="#c0763a"/><rect x="20" y="38" width="32" height="20" rx="4" fill="#fff"/></svg></div><div class="body"><h3>発酵ゆずジャム</h3><p class="spec">120g｜冬季限定・皮ごと使用</p><p class="price">¥1,280<small>（税込）</small></p></div></article>
+      <article class="product fade"><div class="ph" style="background:#ece3d3"><span class="label">ギフト</span><svg width="110" viewBox="0 0 100 80"><rect x="6" y="26" width="88" height="50" rx="6" fill="#3f5a3c"/><rect x="46" y="26" width="8" height="50" fill="#c0763a"/><path d="M50 26c-10-16-24-6-12 0M50 26c10-16 24-6 12 0" stroke="#c0763a" stroke-width="5" fill="none"/></svg></div><div class="body"><h3>発酵ジャム 3種ギフトセット</h3><p class="spec">120g×3本｜化粧箱・のし対応</p><p class="price">¥3,480<small>（税込）</small></p></div></article>
+    </div>
+
+    <h3 class="cat-title fade">発酵だし</h3>
+    <div class="products">
+      <article class="product fade"><div class="ph" style="background:#f1e6d3"><span class="label">定番</span><svg width="80" viewBox="0 0 64 80"><rect x="6" y="6" width="52" height="70" rx="8" fill="#fbf8f2" stroke="#c0763a" stroke-width="3"/><rect x="6" y="6" width="52" height="16" rx="6" fill="#c0763a"/><text x="32" y="54" font-size="14" text-anchor="middle" font-family="serif" font-weight="700" fill="#2b2622">だし</text></svg></div><div class="body"><h3>発酵だし 合わせ（ティーバッグ）</h3><p class="spec">8g×10包｜昆布・かつお・椎茸</p><p class="price">¥1,296<small>（税込）</small></p></div></article>
+      <article class="product fade"><div class="ph" style="background:#e3ebdf"><svg width="80" viewBox="0 0 64 80"><rect x="6" y="6" width="52" height="70" rx="8" fill="#fbf8f2" stroke="#3f5a3c" stroke-width="3"/><rect x="6" y="6" width="52" height="16" rx="6" fill="#3f5a3c"/><text x="32" y="54" font-size="13" text-anchor="middle" font-family="serif" font-weight="700" fill="#2b2622">野菜</text></svg></div><div class="body"><h3>発酵野菜だし（動物性不使用）</h3><p class="spec">8g×10包｜ヴィーガン対応</p><p class="price">¥1,296<small>（税込）</small></p></div></article>
+      <article class="product fade"><div class="ph" style="background:#efe2cf"><svg width="70" viewBox="0 0 56 80"><rect x="12" y="20" width="32" height="56" rx="8" fill="#7a4a24"/><rect x="18" y="6" width="20" height="16" rx="3" fill="#2b2622"/><rect x="16" y="40" width="24" height="20" rx="3" fill="#fbf8f2"/></svg></div><div class="body"><h3>発酵白だし（液体）</h3><p class="spec">300ml｜希釈タイプ・約30食分</p><p class="price">¥1,620<small>（税込）</small></p></div></article>
+      <article class="product fade"><div class="ph" style="background:#e9e0d0"><span class="label">お得</span><svg width="110" viewBox="0 0 100 80"><rect x="6" y="26" width="88" height="50" rx="6" fill="#c0763a"/><rect x="46" y="26" width="8" height="50" fill="#3f5a3c"/><path d="M50 26c-10-16-24-6-12 0M50 26c10-16 24-6 12 0" stroke="#3f5a3c" stroke-width="5" fill="none"/></svg></div><div class="body"><h3>ジャム＆だし 食卓ギフト</h3><p class="spec">ジャム2本＋だし2種</p><p class="price">¥4,980<small>（税込）</small></p></div></article>
+    </div>
+
+    <div class="subscribe fade">
+      <div><h3>毎月届く「発酵のある暮らし」定期便</h3><p>ジャム2本＋発酵だし1袋を毎月お届け。季節の限定品も優先的にお届けします。送料無料・いつでも解約OK。</p></div>
+      <div style="text-align:center"><p style="font-family:'Shippori Mincho',serif;font-size:28px;font-weight:700;opacity:1">月額 ¥3,240<small style="font-size:13px">（税込・送料無料）</small></p><a href="#contact" class="btn btn-accent" style="margin-top:8px">定期便を申し込む</a></div>
+    </div>
+    <p class="note">※ 通常送料：全国一律 ¥770（税込）／ ¥5,400以上のご注文で送料無料。オンラインショップ・ふるさと納税・道の駅などで販売予定。</p>
+  </div>
+</section>
+
+<!-- ===================== 受託発酵 ===================== -->
+<section id="oem">
+  <div class="container">
+    <div class="sec-head fade"><span class="en">CONTRACT FERMENTATION</span><h2>乳酸菌の小ロット受託発酵</h2><p>1L〜15Lまで。「まず少量で試したい」をカタチにします。</p></div>
+
+    <div class="oem-intro">
+      <div class="fade">
+        <h3>大量生産の前に、<br>“ちょうどいい量”で確かめる。</h3>
+        <p>新商品の試作や研究の予備試験では、いきなり大きな設備を借りるのはコストもリスクも大きくなりがちです。発酵ラボ基礎では、乳酸菌発酵を1リットル単位から承り、条件検討・分析・レポート作成までワンストップで対応します。</p>
+        <ul class="check">
+          <li>お客様支給の菌株・原料での発酵に対応</li>
+          <li>当ラボ保有の乳酸菌からのご提案も可能</li>
+          <li>pH・酸度・生菌数の推移をレポート化</li>
+          <li>冷蔵／冷凍でのお届け、サンプル小分けにも対応</li>
+        </ul>
+      </div>
+      <div class="fade">
+        <p style="font-weight:700;margin-bottom:4px">こんな方にご利用いただいています</p>
+        <div class="uses">
+          <span>食品メーカーの商品開発</span><span>飲食店のオリジナル発酵調味料</span><span>大学・研究機関の予備試験</span><span>農家さんの6次産業化</span><span>化粧品原料の試作</span><span>スタートアップのPoC</span><span>ペットフードの試作</span><span>クラウドファンディング用の試作</span>
+        </div>
+        <p style="font-weight:700;margin:28px 0 4px">対応できる発酵の例</p>
+        <div class="uses">
+          <span>果汁・野菜汁の乳酸発酵</span><span>豆乳・植物性ミルク発酵</span><span>穀物（米・麦）の乳酸発酵</span><span>発酵調味料ベース</span><span>植物エキスの発酵</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="plans">
+      <div class="plan fade">
+        <span class="pname">TRIAL</span><h3>お試しプラン</h3><span class="vol">1L × 1条件</span>
+        <p class="fee">¥38,500<small>（税込）〜</small></p>
+        <p class="desc">「本当に発酵するか」をまず確認したい方に。初めてのご依頼に最適です。</p>
+        <ul>
+          <li>発酵1回（1L・1条件）</li>
+          <li>発酵前後のpH・酸度測定</li>
+          <li>簡易レポート（PDF）</li>
+          <li>オンライン打合せ 1回（30分）</li>
+          <li class="no">生菌数測定</li>
+          <li class="no">条件の比較検討</li>
+        </ul>
+        <p class="meta">納期目安：約2週間<br>1Lあたり：¥38,500</p>
+        <a href="#contact" class="btn btn-line">このプランで相談する</a>
+      </div>
+      <div class="plan pop fade">
+        <span class="ribbon">いちばん人気</span>
+        <span class="pname">STANDARD</span><h3>スタンダードプラン</h3><span class="vol">5L ／ 最大3条件比較</span>
+        <p class="fee">¥110,000<small>（税込）〜</small></p>
+        <p class="desc">試作品づくりや、温度・時間・菌株などの条件を比べて最適解を探したい方に。</p>
+        <ul>
+          <li>発酵 合計5L（最大3条件に分割可）</li>
+          <li>pH・酸度の経時測定（6ポイント）</li>
+          <li>生菌数測定（各条件1回）</li>
+          <li>グラフ付き詳細レポート</li>
+          <li>簡易官能評価（味・香り）</li>
+          <li>オンライン打合せ 2回</li>
+        </ul>
+        <p class="meta">納期目安：約3〜4週間<br>1Lあたり：¥22,000</p>
+        <a href="#contact" class="btn btn-accent">このプランで相談する</a>
+      </div>
+      <div class="plan fade">
+        <span class="pname">PRO</span><h3>スケールアッププラン</h3><span class="vol">15L ／ 量産前の検証</span>
+        <p class="fee">¥264,000<small>（税込）〜</small></p>
+        <p class="desc">テスト販売・展示会用サンプル、量産工場への技術移転の準備に。</p>
+        <ul>
+          <li>発酵 合計15L（最大5条件まで）</li>
+          <li>pH・酸度・生菌数の経時測定</li>
+          <li>製造条件書（レシピ・工程表）の作成</li>
+          <li>保存性テスト（冷蔵2週間）</li>
+          <li>サンプル小分け充填（50本まで）</li>
+          <li>打合せ 回数無制限・量産先のご紹介</li>
+        </ul>
+        <p class="meta">納期目安：約4〜6週間<br>1Lあたり：¥17,600</p>
+        <a href="#contact" class="btn btn-line">このプランで相談する</a>
+      </div>
+    </div>
+
+    <div class="table-wrap fade">
+      <table>
+        <thead><tr><th>オプション</th><th>内容</th><th>料金（税込）</th></tr></thead>
+        <tbody>
+          <tr><td>菌株選定サポート</td><td>当ラボ保有の乳酸菌から原料に合う菌を3株まで試験・ご提案</td><td class="p">¥33,000</td></tr>
+          <tr><td>追加の発酵量</td><td>各プランの容量を超える分（1L単位）</td><td class="p">¥11,000 / L</td></tr>
+          <tr><td>生菌数測定（追加）</td><td>1検体あたり</td><td class="p">¥5,500</td></tr>
+          <tr><td>一般生菌・大腸菌群検査</td><td>外部検査機関への手配含む</td><td class="p">¥16,500〜</td></tr>
+          <tr><td>特急対応</td><td>納期を約半分に短縮（設備の空き状況によります）</td><td class="p">基本料金の +30%</td></tr>
+          <tr><td>サンプル保管</td><td>冷凍保管（−20℃）1か月あたり</td><td class="p">¥3,300</td></tr>
+          <tr><td>クール便発送</td><td>冷蔵・冷凍便（1箱あたり）</td><td class="p">¥1,650〜</td></tr>
+          <tr><td>秘密保持契約（NDA）</td><td>ご依頼前の締結にも対応</td><td class="p">無料</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">※ 表示価格はすべて目安です。原料・菌株の種類、発酵条件によりお見積りが変わります。原料費は実費となります。<br>※ 法人・研究機関の継続ご依頼には、2回目以降10%OFFのリピート割引がございます。</p>
+  </div>
+</section>
+
+<!-- ===================== ご依頼の流れ ===================== -->
+<section id="flow" class="sec-alt">
+  <div class="container">
+    <div class="sec-head fade"><span class="en">FLOW</span><h2>ご依頼の流れ</h2><p>はじめての方でも安心して進められるよう、丁寧にご案内します。</p></div>
+    <div class="flow">
+      <div class="step fade"><h3>お問い合わせ</h3><p>フォームからお気軽にご相談ください</p><span class="d">2営業日以内に返信</span></div>
+      <div class="step fade"><h3>無料ヒアリング</h3><p>目的・原料・ご予算をオンラインで伺います</p><span class="d">30分〜</span></div>
+      <div class="step fade"><h3>お見積り・NDA</h3><p>最適なプランと費用をご提示します</p><span class="d">3営業日</span></div>
+      <div class="step fade"><h3>原料・菌株受入</h3><p>ご支給品の受け入れ、または当ラボで手配</p><span class="d">ご都合に合わせて</span></div>
+      <div class="step fade"><h3>発酵・分析</h3><p>途中経過も随時ご報告します</p><span class="d">1〜5週間</span></div>
+      <div class="step fade"><h3>納品・レポート</h3><p>サンプルと報告書をお届けします</p><span class="d">アフターフォロー付</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 実績 ===================== -->
+<section id="works">
+  <div class="container">
+    <div class="sec-head fade"><span class="en">WORKS</span><h2>数字で見る発酵ラボ基礎</h2><p>※数値は開業準備中のサンプルです。実際の実績に差し替えてご利用ください。</p></div>
+    <div class="stats">
+      <div class="stat fade"><b><span class="count" data-to="120">0</span><small>件+</small></b><span>受託発酵のご相談</span></div>
+      <div class="stat fade"><b><span class="count" data-to="35">0</span><small>種</small></b><span>保有・試験した乳酸菌株</span></div>
+      <div class="stat fade"><b><span class="count" data-to="92">0</span><small>%</small></b><span>リピート・継続依頼率</span></div>
+      <div class="stat fade"><b><span class="count" data-to="8000">0</span><small>個+</small></b><span>発酵ジャム・だし 累計出荷</span></div>
+    </div>
+    <div class="cases">
+      <div class="case fade"><span class="who">食品メーカー様（関東）</span><h3>果汁の乳酸発酵ドリンク試作</h3><p>5L・3条件で温度と時間を比較。酸味と香りのバランスが最も良い条件を特定し、量産工場へのレシピ移管まで完了しました。</p><div class="tags"><span>スタンダード</span><span>約4週間</span></div></div>
+      <div class="case fade"><span class="who">レストラン様（関西）</span><h3>オリジナル発酵調味料の開発</h3><p>シェフ考案の野菜ペーストを1Lで発酵テスト。2回の試作を経て、看板メニューの隠し味として採用いただきました。</p><div class="tags"><span>お試し×2回</span><span>約1か月</span></div></div>
+      <div class="case fade"><span class="who">大学研究室様</span><h3>植物性ミルク発酵の予備試験</h3><p>本実験前の条件スクリーニングとして15Lを5条件で実施。経時データのレポートを論文の予備データとしてご活用いただきました。</p><div class="tags"><span>スケールアップ</span><span>約6週間</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== お客様の声 ===================== -->
+<section id="voice" class="sec-alt">
+  <div class="container">
+    <div class="sec-head fade"><span class="en">VOICE</span><h2>お客様の声</h2></div>
+    <div class="voices">
+      <div class="voice fade"><div class="stars">★★★★★</div><p>他社では最低ロットが大きすぎて断念していました。1Lから試せたおかげで、社内の稟議も通しやすかったです。</p><div class="by"><span class="av">🏭</span>食品メーカー 開発担当 様</div></div>
+      <div class="voice fade"><div class="stars">★★★★★</div><p>レポートがグラフ付きでとても分かりやすい。発酵の知識がなくても、何が起きているのかが理解できました。</p><div class="by"><span class="av">🌾</span>農業法人 代表 様</div></div>
+      <div class="voice fade"><div class="stars">★★★★★</div><p>発酵いちごジャム、酸味がやさしくて子どもも大好き。ヨーグルトにかけるのが毎朝の楽しみです。</p><div class="by"><span class="av">🍓</span>ECサイトご購入者 様</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 品質へのこだわり ===================== -->
+<section id="quality">
+  <div class="container">
+    <div class="sec-head fade"><span class="en">QUALITY</span><h2>品質と安全へのこだわり</h2></div>
+    <div class="quality">
+      <div class="q fade"><div class="ic"><svg width="40" viewBox="0 0 40 40"><path d="M20 4l13 5v10c0 9-6 15-13 17C13 34 7 28 7 19V9z" fill="none" stroke="#3f5a3c" stroke-width="2.5"/><path d="M14 20l4 4 8-8" fill="none" stroke="#c0763a" stroke-width="2.5"/></svg></div><h3>衛生管理の徹底</h3><p>HACCPの考え方に沿った衛生管理を実施。菓子製造業・そうざい製造業などの営業許可を取得予定です。</p></div>
+      <div class="q fade"><div class="ic"><svg width="40" viewBox="0 0 40 40"><rect x="6" y="6" width="28" height="28" rx="4" fill="none" stroke="#3f5a3c" stroke-width="2.5"/><path d="M12 26l5-7 5 4 6-9" fill="none" stroke="#c0763a" stroke-width="2.5"/></svg></div><h3>データに基づく管理</h3><p>発酵中の温度・pHを記録し、ロットごとにデータを保管。品質のばらつきを抑え、再現性を高めています。</p></div>
+      <div class="q fade"><div class="ic"><svg width="40" viewBox="0 0 40 40"><path d="M20 34c-8-5-13-11-13-18a13 13 0 0 1 26 0c0 7-5 13-13 18z" fill="none" stroke="#3f5a3c" stroke-width="2.5"/><path d="M20 12v12M14 18h12" stroke="#c0763a" stroke-width="2.5"/></svg></div><h3>国産原料・無添加</h3><p>自社商品は国産原料を中心に、保存料・着色料・化学調味料を使用していません。原料の産地も公開しています。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FAQ ===================== -->
+<section id="faq" class="sec-alt">
+  <div class="container">
+    <div class="sec-head fade"><span class="en">FAQ</span><h2>よくある質問</h2></div>
+    <div class="faq">
+      <details class="fade"><summary>個人でも受託発酵を依頼できますか？</summary><div class="a">はい、可能です。個人事業主の方や、クラウドファンディング用の試作を検討中の個人の方からもご依頼をいただいています。</div></details>
+      <details class="fade"><summary>乳酸菌以外（酵母・麹など）の発酵もできますか？</summary><div class="a">現在は乳酸菌発酵を中心に承っています。酵母や麹との複合発酵については、内容により対応可能な場合がありますので、まずはご相談ください。</div></details>
+      <details class="fade"><summary>菌株や原料は自分で用意する必要がありますか？</summary><div class="a">どちらでも対応可能です。お客様支給の菌株・原料をお使いいただくことも、当ラボで保有する乳酸菌や原料の手配をご提案することもできます。</div></details>
+      <details class="fade"><summary>15Lを超える量は対応していますか？</summary><div class="a">当ラボでの対応は15Lまでですが、それ以上の量産をご希望の場合は、提携先の製造工場をご紹介し、技術移転のサポートを行います。</div></details>
+      <details class="fade"><summary>レシピや菌株の情報は守られますか？</summary><div class="a">ご依頼前に無料で秘密保持契約（NDA）を締結します。いただいた情報は案件担当者のみが扱い、成果物の権利はお客様に帰属します。</div></details>
+      <details class="fade"><summary>支払い方法を教えてください。</summary><div class="a">法人様は請求書払い（月末締め翌月末払い）、個人様は事前の銀行振込またはクレジットカード決済に対応しています。お試しプランは前払いとなります。</div></details>
+      <details class="fade"><summary>商品の賞味期限や保存方法は？</summary><div class="a">発酵ジャムは未開封で製造から6か月（常温）、開封後は冷蔵で2週間を目安にお召し上がりください。発酵だしは未開封で製造から1年です。</div></details>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== お知らせ ===================== -->
+<section id="news">
+  <div class="container">
+    <div class="sec-head fade"><span class="en">NEWS</span><h2>お知らせ</h2></div>
+    <ul class="news fade">
+      <li><time datetime="2026-11-18">2026.11.18</time><span class="cat">お知らせ</span><span>公式ホームページを公開しました。</span></li>
+      <li><time datetime="2026-11-10">2026.11.10</time><span class="cat">新商品</span><span>冬季限定「発酵ゆずジャム」の予約受付を開始しました。</span></li>
+      <li><time datetime="2026-11-01">2026.11.01</time><span class="cat">受託発酵</span><span>年内納品の受託発酵は12月5日（土）受付分までとなります。</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================== 会社概要 ===================== -->
+<section id="company" class="sec-alt">
+  <div class="container">
+    <div class="sec-head fade"><span class="en">COMPANY</span><h2>会社概要・代表メッセージ</h2></div>
+    <div class="about">
+      <div class="message fade">
+        <h3>小さなラボだからこそ、<br>ひとつひとつの発酵に向き合える。</h3>
+        <p>発酵は、目に見えない微生物との共同作業です。同じレシピでも、温度や時間、原料のわずかな違いで結果が大きく変わります。</p>
+        <p>私たちは、自分たちで発酵食品をつくり、販売するなかで、その奥深さと可能性を実感してきました。その経験を、これから発酵に挑戦する企業や研究者、生産者の皆さまにも役立てていただきたい。そんな想いで、小ロットの受託発酵をはじめました。</p>
+        <p>「基礎」という名前には、発酵の基本を大切にし、皆さまのものづくりの土台になりたいという願いを込めています。</p>
+        <p class="sign">発酵ラボ基礎 代表　〇〇 〇〇</p>
+      </div>
+      <table class="company fade">
+        <tr><th>屋号</th><td>発酵ラボ基礎（はっこうらぼ きそ）</td></tr>
+        <tr><th>代表者</th><td>〇〇 〇〇</td></tr>
+        <tr><th>設立</th><td>20XX年XX月</td></tr>
+        <tr><th>所在地</th><td>〒000-0000<br>〇〇県〇〇市〇〇町0-0-0</td></tr>
+        <tr><th>事業内容</th><td>・発酵ジャム、発酵だしの製造・販売<br>・乳酸菌の小ロット受託発酵（1L〜15L）<br>・発酵食品の商品開発コンサルティング</td></tr>
+        <tr><th>営業時間</th><td>平日 9:00〜18:00（土日祝休み）</td></tr>
+        <tr><th>許認可</th><td>菓子製造業／そうざい製造業（取得予定）</td></tr>
+        <tr><th>取引銀行</th><td>〇〇銀行 〇〇支店</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CTA ===================== -->
+<section class="cta">
+  <div class="container fade">
+    <h2>「こんな発酵、できますか？」<br>まずはお気軽にご相談ください。</h2>
+    <p>ヒアリング・お見積りは無料です。資料だけのご請求も歓迎しています。</p>
+    <div class="hero-btns" style="justify-content:center">
+      <a href="#contact" class="btn btn-accent">無料で相談する</a>
+      <a href="#oem" class="btn btn-line">料金プランを見る</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== お問い合わせ ===================== -->
+<section id="contact">
+  <div class="container">
+    <div class="sec-head fade"><span class="en">CONTACT</span><h2>お問い合わせ</h2><p>受託発酵のご相談、商品のご注文・卸のご相談はこちらから。</p></div>
+    <div class="contact-box fade">
+      <div class="contact-tel">
+        <div><span>お電話でのお問い合わせ</span><b>000-000-0000</b><span>平日 9:00〜18:00</span></div>
+        <div><span>メールでのお問い合わせ</span><b style="font-size:18px">info@example.com</b><span>24時間受付</span></div>
+      </div>
+      <form id="form">
+        <div>
+          <label>ご相談内容<span class="req">必須</span></label>
+          <div class="radio-row">
+            <label><input type="radio" name="type" value="受託発酵" checked>受託発酵のご相談</label>
+            <label><input type="radio" name="type" value="商品">商品のご注文・定期便</label>
+            <label><input type="radio" name="type" value="卸">卸・お取引</label>
+            <label><input type="radio" name="type" value="その他">その他</label>
+          </div>
+        </div>
+        <div class="row2">
+          <div><label for="name">お名前<span class="req">必須</span></label><input id="name" required placeholder="発酵 太郎"></div>
+          <div><label for="org">会社名・団体名</label><input id="org" placeholder="株式会社〇〇"></div>
+        </div>
+        <div class="row2">
+          <div><label for="mail">メールアドレス<span class="req">必須</span></label><input id="mail" type="email" required placeholder="example@mail.com"></div>
+          <div><label for="tel">電話番号</label><input id="tel" type="tel" placeholder="000-0000-0000"></div>
+        </div>
+        <div class="row2">
+          <div><label for="plan">ご希望のプラン</label><select id="plan"><option>未定・相談したい</option><option>お試しプラン（1L）</option><option>スタンダードプラン（5L）</option><option>スケールアッププラン（15L）</option></select></div>
+          <div><label for="when">ご希望の納期</label><select id="when"><option>特に決まっていない</option><option>1か月以内</option><option>2〜3か月以内</option><option>半年以内</option></select></div>
+        </div>
+        <div><label for="msg">ご相談内容の詳細<span class="req">必須</span></label><textarea id="msg" rows="6" required placeholder="例）りんご果汁を乳酸菌で発酵させたドリンクを試作したい。原料はこちらで用意可能。"></textarea></div>
+        <p class="note" style="margin:0">送信いただいた個人情報は、お問い合わせへの回答のみに利用します。</p>
+        <button class="btn btn-main" type="submit" style="justify-self:center;min-width:260px">内容を確認して送信する</button>
+        <p class="form-msg" id="formMsg">お問い合わせありがとうございます。2営業日以内にご連絡いたします。<br><small style="font-weight:400">（※デモ表示です。実際の送信先は公開前に設定します）</small></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ===================== フッター ===================== -->
+<footer>
+  <div class="container foot">
+    <div>
+      <div class="logo"><span>発酵ラボ基礎<small>HAKKO LAB KISO</small></span></div>
+      <p>発酵ジャム・発酵だしの製造販売と、<br>乳酸菌の小ロット受託発酵（1L〜15L）。</p>
+    </div>
+    <div><h4>事業内容</h4><ul><li><a href="#products">発酵ジャム</a></li><li><a href="#products">発酵だし</a></li><li><a href="#oem">受託発酵</a></li></ul></div>
+    <div><h4>ご案内</h4><ul><li><a href="#oem">料金プラン</a></li><li><a href="#flow">ご依頼の流れ</a></li><li><a href="#faq">よくある質問</a></li></ul></div>
+    <div><h4>会社情報</h4><ul><li><a href="#company">会社概要</a></li><li><a href="#news">お知らせ</a></li><li><a href="#contact">お問い合わせ</a></li><li><a href="#contact">特定商取引法に基づく表記</a></li><li><a href="#contact">プライバシーポリシー</a></li></ul></div>
+  </div>
+  <p class="copy">© 2026 発酵ラボ基礎 All Rights Reserved.</p>
+</footer>
+
+<a href="#top" class="to-top" id="toTop" aria-label="ページ上部へ">↑</a>
+
+<script>
+// スマホ用メニューの開け閉め
+const nav = document.getElementById('nav');
+document.getElementById('menuBtn').addEventListener('click', () => nav.classList.toggle('open'));
+nav.querySelectorAll('ul a').forEach(a => a.addEventListener('click', () => nav.classList.remove('open')));
+
+// スクロールでふわっと表示 ＋ 数字のカウントアップ
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    e.target.classList.add('show');
+    e.target.querySelectorAll('.count').forEach(el => {
+      const to = +el.dataset.to; let n = 0; const step = Math.max(1, Math.ceil(to / 60));
+      const t = setInterval(() => { n = Math.min(to, n + step); el.textContent = n.toLocaleString(); if (n >= to) clearInterval(t); }, 20);
+    });
+    io.unobserve(e.target);
+  });
+}, { threshold: .15 });
+document.querySelectorAll('.fade').forEach(el => io.observe(el));
+
+// 「ページ上部へ」ボタン
+const toTop = document.getElementById('toTop');
+addEventListener('scroll', () => toTop.classList.toggle('show', scrollY > 600));
+
+// お問い合わせフォーム（デモ：送信完了メッセージを表示するだけ）
+document.getElementById('form').addEventListener('submit', e => {
+  e.preventDefault();
+  document.getElementById('formMsg').style.display = 'block';
+  e.target.querySelector('button').style.display = 'none';
+});
+</script>
+</body>
+</html>
